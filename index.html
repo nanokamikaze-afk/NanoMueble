@@ -3,236 +3,98 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>NanoMueble | Calculadora de cajones</title>
+    <title>NanoMueble | Herramientas para muebles</title>
     <link rel="stylesheet" href="styles.css">
   </head>
-  <body>
+  <body class="home-page">
     <header class="topbar">
-      <a class="brand" href="#" aria-label="NanoMueble inicio">
+      <a class="brand" href="index.html" aria-label="NanoMueble inicio">
         <span class="brand-mark">N</span>
         <span>NanoMueble</span>
       </a>
       <nav aria-label="Secciones">
-        <a href="#calculadora">Calculadora</a>
-        <a href="#despiece">Despiece</a>
-        <a href="#guia">Guia rapida</a>
+        <a href="calculadora-cajones.html">Calculadora</a>
+        <a href="despiece-planchas.html">Despiece</a>
+        <a href="#herramientas">Herramientas</a>
+        <a href="#flujo">Flujo</a>
       </nav>
     </header>
 
     <main>
-      <section class="hero" aria-labelledby="page-title">
-        <div class="hero-content">
-          <p class="eyebrow">Herramienta para taller</p>
-          <h1 id="page-title">Calculadora de cajones para muebles</h1>
+      <section class="home-hero" aria-labelledby="home-title">
+        <div class="home-copy">
+          <p class="eyebrow">Herramientas para taller</p>
+          <h1 id="home-title">Calcula muebles con medidas claras antes de cortar</h1>
           <p>
-            Ingresa las medidas interiores del vano, el tipo de corredera y la cantidad de cajones.
-            Obtendras medidas exteriores, alturas, profundidad y piezas de corte.
+            NanoMueble reune calculadoras practicas para planificar piezas, holguras,
+            correderas y frentes con una vista 3D del resultado.
           </p>
+          <div class="hero-actions">
+            <a class="primary-action" href="calculadora-cajones.html">Abrir calculadora</a>
+            <a class="secondary-action" href="#herramientas">Ver herramientas</a>
+          </div>
         </div>
-        <div class="hero-visual" aria-hidden="true">
-          <div class="model-stage hero-model">
-            <label class="structure-toggle">
-              <input type="checkbox" checked disabled>
-              <span>Mostrar estructura</span>
-            </label>
-            <svg class="cabinet-model" id="hero-model" viewBox="0 0 760 520" role="img"></svg>
+
+        <div class="home-preview" aria-hidden="true">
+          <div class="preview-board">
+            <span class="board-top"></span>
+            <span class="board-side"></span>
+            <span class="board-shelf board-shelf-one"></span>
+            <span class="board-shelf board-shelf-two"></span>
+            <span class="board-drawer board-drawer-one"></span>
+            <span class="board-drawer board-drawer-two"></span>
+            <span class="board-drawer board-drawer-three"></span>
           </div>
         </div>
       </section>
 
-      <section class="workspace" id="calculadora" aria-label="Calculadora de cajones">
-        <form class="panel config-panel" id="drawer-form">
-          <div class="panel-heading">
-            <p class="eyebrow">Configuracion</p>
-            <h2>Medidas del mueble</h2>
-          </div>
-
-          <div class="field-grid">
-            <label>
-              <span>Ancho interior</span>
-              <div class="input-shell">
-                <input id="cabinet-width" type="number" min="1" step="0.1" value="400" required>
-                <span>mm</span>
-              </div>
-            </label>
-
-            <label>
-              <span>Alto interior</span>
-              <div class="input-shell">
-                <input id="cabinet-height" type="number" min="1" step="0.1" value="600" required>
-                <span>mm</span>
-              </div>
-            </label>
-
-            <label>
-              <span>Fondo disponible</span>
-              <div class="input-shell">
-                <input id="cabinet-depth" type="number" min="1" step="0.1" value="450" required>
-                <span>mm</span>
-              </div>
-            </label>
-
-            <label>
-              <span>Cantidad</span>
-              <select id="drawer-count">
-                <option>1</option>
-                <option>2</option>
-                <option selected>3</option>
-                <option>4</option>
-                <option>5</option>
-                <option>6</option>
-              </select>
-            </label>
-
-            <label>
-              <span>Corredera por lado</span>
-              <div class="input-shell">
-                <input id="slide-thickness" type="number" min="0" step="0.1" value="13">
-                <span>mm</span>
-              </div>
-            </label>
-
-            <label>
-              <span>Largo corredera</span>
-              <div class="input-shell">
-                <input id="slide-length" type="number" min="1" step="0.1" value="400">
-                <span>mm</span>
-              </div>
-            </label>
-
-            <label>
-              <span>Descuento profundidad</span>
-              <div class="input-shell">
-                <input id="depth-discount" type="number" min="0" step="0.1" value="30">
-                <span>mm</span>
-              </div>
-            </label>
-
-            <label>
-              <span>Holgura vertical</span>
-              <div class="input-shell">
-                <input id="vertical-gap" type="number" min="0" step="0.1" value="2">
-                <span>mm</span>
-              </div>
-            </label>
-
-            <label>
-              <span>Grosor material</span>
-              <select id="material-thickness">
-                <option value="12">12 mm</option>
-                <option value="15">15 mm</option>
-                <option value="16" selected>16 mm</option>
-                <option value="18">18 mm</option>
-                <option value="19">19 mm</option>
-              </select>
-            </label>
-
-            <label>
-              <span>Grosor fondo</span>
-              <select id="bottom-thickness">
-                <option value="3" selected>3 mm</option>
-                <option value="5">5 mm</option>
-                <option value="6">6 mm</option>
-                <option value="9">9 mm</option>
-              </select>
-            </label>
-
-            <label>
-              <span>Instalacion fondo</span>
-              <select id="bottom-mode">
-                <option value="under" selected>Clavado por debajo</option>
-                <option value="grooved">Fondo ranurado</option>
-              </select>
-            </label>
-
-            <label>
-              <span>Profundidad ranura</span>
-              <div class="input-shell">
-                <input id="groove-depth" type="number" min="0" step="0.1" value="6">
-                <span>mm</span>
-              </div>
-            </label>
-          </div>
-        </form>
-
-        <section class="panel output-panel" aria-live="polite">
-          <div class="panel-heading">
-            <p class="eyebrow">Resultado</p>
-            <h2>Medidas calculadas</h2>
-          </div>
-
-          <div class="drawer-preview">
-            <label class="structure-toggle">
-              <input id="show-structure" type="checkbox" checked>
-              <span>Mostrar estructura</span>
-            </label>
-            <svg class="cabinet-model" id="preview-cabinet" viewBox="0 0 760 520" role="img" aria-label="Vista 3D del mueble calculado"></svg>
-          </div>
-
-          <dl class="metric-grid">
-            <div>
-              <dt>Ancho cajon</dt>
-              <dd id="result-width">374 mm</dd>
-            </div>
-            <div>
-              <dt>Alto por cajon</dt>
-              <dd id="result-height">198 mm</dd>
-            </div>
-            <div>
-              <dt>Profundidad</dt>
-              <dd id="result-depth">370 mm</dd>
-            </div>
-            <div>
-              <dt>Holgura total</dt>
-              <dd id="result-gap">6 mm</dd>
-            </div>
-            <div>
-              <dt>Ancho puerta</dt>
-              <dd id="result-door-width">396 mm</dd>
-            </div>
-            <div>
-              <dt>Alto puerta</dt>
-              <dd id="result-door-height">197,3 mm</dd>
-            </div>
-          </dl>
-
-          <p class="validation-message" id="depth-warning" hidden></p>
-        </section>
-      </section>
-
-      <section class="details" id="despiece">
+      <section class="tool-band" id="herramientas">
         <div class="section-heading">
-          <p class="eyebrow">Lista de despiece</p>
-          <h2>Piezas para cortar</h2>
+          <p class="eyebrow">Disponible ahora</p>
+          <h2>Herramientas de calculo</h2>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Pieza</th>
-                <th>Cantidad</th>
-                <th>Ancho</th>
-                <th>Largo</th>
-                <th>Material</th>
-              </tr>
-            </thead>
-            <tbody id="cut-list"></tbody>
-          </table>
+
+        <div class="tool-grid">
+          <a class="tool-card" href="calculadora-cajones.html">
+            <span class="tool-icon">01</span>
+            <h3>Calculadora de cajones</h3>
+            <p>
+              Calcula ancho, alto, profundidad, frente visible, fondo y despiece.
+              Valida que la corredera no sea mas larga que el mueble.
+            </p>
+          </a>
+          <article class="tool-card muted-card">
+            <span class="tool-icon">02</span>
+            <h3>Optimizador de planchas</h3>
+            <p>
+              Organiza piezas en planchas de melamina, considera sangría,
+              margen, grano y genera un diagrama de despiece.
+            </p>
+            <a class="inline-link" href="despiece-planchas.html">Abrir optimizador</a>
+          </article>
         </div>
       </section>
 
-      <section class="guide" id="guia" aria-label="Guia de calculo">
-        <article>
-          <h2>Reglas usadas</h2>
-          <p><strong>Ancho:</strong> ancho interior menos dos correderas. El valor inicial usa 13 mm por lado.</p>
-          <p><strong>Alto:</strong> alto interior menos holguras, dividido por la cantidad de cajones.</p>
-          <p><strong>Profundidad:</strong> el fondo disponible debe ser igual o mayor al largo de la corredera.</p>
-          <p><strong>Puerta:</strong> el frente del cajon descuenta 2 mm por orilla para evitar roces.</p>
-          <p><strong>Fondo:</strong> puede quedar igual a la caja exterior o crecer por la ranura cuando se elige fondo ranurado.</p>
-        </article>
+      <section class="workflow" id="flujo">
+        <div>
+          <p class="eyebrow">Como usarlo</p>
+          <h2>Del vano al despiece en minutos</h2>
+        </div>
+        <ol class="workflow-list">
+          <li>
+            <strong>Ingresa medidas interiores</strong>
+            <span>Ancho, alto, fondo disponible y cantidad de cajones.</span>
+          </li>
+          <li>
+            <strong>Configura correderas y material</strong>
+            <span>Define largo de corredera, grosor de tablero y tipo de fondo.</span>
+          </li>
+          <li>
+            <strong>Revisa el resultado</strong>
+            <span>Obtienes medidas, advertencias, despiece y modelo 3D interactivo.</span>
+          </li>
+        </ol>
       </section>
     </main>
-
-    <script src="script.js"></script>
   </body>
 </html>

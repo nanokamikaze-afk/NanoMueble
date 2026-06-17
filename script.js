@@ -32,7 +32,7 @@ const results = {
 };
 
 const modelViews = {
-  hero: { yaw: 180, pitch: 12 },
+  hero: { yaw: 160, pitch: 12 },
   preview: { yaw: 180, pitch: 12 },
 };
 
@@ -184,6 +184,8 @@ function renderCabinet(svg, options, view = modelViews.preview) {
   const project = makeProjector(view);
   const drawerCount = Math.max(options.drawerCount, 1);
   const showStructure = options.showStructure;
+  const activeDrawerIndex = options.selectedDrawerIndex ?? selectedDrawerIndex;
+  const openProgress = options.drawerOpenProgress ?? drawerOpenProgress;
   const width = 330;
   const height = 340;
   const depth = 245;
@@ -212,10 +214,10 @@ function renderCabinet(svg, options, view = modelViews.preview) {
   }
 
   for (let index = 0; index < drawerCount; index += 1) {
-    const isActive = selectedDrawerIndex === index;
+    const isActive = activeDrawerIndex === index;
     const drawerY = y0 + board + index * (drawerHeight + drawerGap);
-    const openOffset = isActive ? -118 * drawerOpenProgress : 4;
-    const openDrop = isActive ? 14 * drawerOpenProgress : 0;
+    const openOffset = isActive ? -118 * openProgress : 4;
+    const openDrop = isActive ? 14 * openProgress : 0;
     const drawerClass = isActive ? "drawer drawer-active" : "drawer drawer-wood";
     const drawerX = x0 + board + 8;
     const activeDrawerY = drawerY + openDrop;
@@ -362,7 +364,11 @@ function animateDrawer(targetProgress, onComplete) {
 function renderModels() {
   if (!latestModelOptions) return;
   renderCabinet(results.preview, latestModelOptions, modelViews.preview);
-  renderCabinet(results.hero, { ...latestModelOptions, drawerCount: Math.max(latestModelOptions.drawerCount, 3), showStructure: true }, modelViews.hero);
+  renderCabinet(
+    results.hero,
+    { ...latestModelOptions, drawerCount: Math.max(latestModelOptions.drawerCount, 3), showStructure: true, selectedDrawerIndex: null, drawerOpenProgress: 0 },
+    modelViews.hero,
+  );
 }
 
 function calculate() {
@@ -546,4 +552,3 @@ function bindModelDrag(svg, view) {
 }
 
 bindModelDrag(results.preview, modelViews.preview);
-bindModelDrag(results.hero, modelViews.hero);

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NanoMueble | Optimizador de planchas</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="NanoMueble inicio">
+        <span class="brand-mark">N</span>
+        <span>NanoMueble</span>
+      </a>
+      <nav aria-label="Secciones">
+        <a href="index.html">Inicio</a>
+        <a href="calculadora-cajones.html">Cajones</a>
+        <a href="#optimizador">Optimizador</a>
+        <a href="#resultado">Resultado</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="tool-hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Despiece de melamina</p>
+          <h1 id="page-title">Cálculo de medidas y optimización de planchas</h1>
+          <p>
+            Ingresa el formato de plancha y la lista de piezas. El sistema ubica las piezas
+            con un algoritmo Greedy/FFDH, considera sangría, margen y restricción de grano.
+          </p>
+        </div>
+      </section>
+
+      <section class="optimizer-layout" id="optimizador">
+        <form class="panel optimizer-panel" id="sheet-form">
+          <div class="panel-heading">
+            <p class="eyebrow">Configuración</p>
+            <h2>Plancha y corte</h2>
+          </div>
+
+          <div class="field-grid">
+            <label>
+              <span>Formato de plancha</span>
+              <select id="sheet-preset">
+                <option value="2750x1830">Europeo 2750 x 1830</option>
+                <option value="2440x1220" selected>Latinoamérica 2440 x 1220</option>
+                <option value="3050x1830">Formato grande 3050 x 1830</option>
+                <option value="1220x1220">Media plancha 1220 x 1220</option>
+                <option value="custom">Personalizado</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Material</span>
+              <select id="sheet-material">
+                <option>Aglomerado melamina</option>
+                <option>MDF melamina</option>
+                <option>HDF melamina</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Largo plancha</span>
+              <div class="input-shell">
+                <input id="sheet-length" type="number" min="1" step="1" value="2440">
+                <span>mm</span>
+              </div>
+            </label>
+
+            <label>
+              <span>Ancho plancha</span>
+              <div class="input-shell">
+                <input id="sheet-width" type="number" min="1" step="1" value="1220">
+                <span>mm</span>
+              </div>
+            </label>
+
+            <label>
+              <span>Espesor</span>
+              <select id="sheet-thickness">
+                <option value="12">12 mm</option>
+                <option value="15">15 mm</option>
+                <option value="18" selected>18 mm</option>
+                <option value="25">25 mm</option>
+                <option value="30">30 mm</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Sangría de sierra</span>
+              <div class="input-shell">
+                <input id="kerf" type="number" min="0" step="0.1" value="3.2">
+                <span>mm</span>
+              </div>
+            </label>
+
+            <label>
+              <span>Margen por lado</span>
+              <div class="input-shell">
+                <input id="margin" type="number" min="0" step="1" value="10">
+                <span>mm</span>
+              </div>
+            </label>
+
+            <label>
+              <span>Grano / veta</span>
+              <select id="grain-mode">
+                <option value="locked" selected>Respetar orientación</option>
+                <option value="free">Permitir rotación</option>
+              </select>
+            </label>
+          </div>
+        </form>
+
+        <section class="panel parts-panel">
+          <div class="panel-heading">
+            <p class="eyebrow">Piezas</p>
+            <h2>Lista de corte</h2>
+          </div>
+
+          <div class="parts-editor" id="parts-editor"></div>
+          <button class="add-row-button" id="add-part" type="button">Agregar pieza</button>
+        </section>
+      </section>
+
+      <section class="panel result-panel" id="resultado">
+        <div class="panel-heading">
+          <p class="eyebrow">Resultado</p>
+          <h2>Plan de despiece</h2>
+        </div>
+
+        <dl class="metric-grid optimizer-metrics">
+          <div>
+            <dt>Planchas</dt>
+            <dd id="metric-sheets">1</dd>
+          </div>
+          <div>
+            <dt>Aprovechamiento</dt>
+            <dd id="metric-efficiency">0%</dd>
+          </div>
+          <div>
+            <dt>Desperdicio</dt>
+            <dd id="metric-waste">0%</dd>
+          </div>
+          <div>
+            <dt>Merma por corte</dt>
+            <dd id="metric-kerf">0 mm</dd>
+          </div>
+        </dl>
+
+        <p class="validation-message" id="optimizer-warning" hidden></p>
+
+        <div class="sheet-output" id="sheet-output" aria-label="Diagrama de despiece"></div>
+      </section>
+
+      <section class="details">
+        <div class="section-heading">
+          <p class="eyebrow">Reporte</p>
+          <h2>Lista de materiales y cortes</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Plancha</th>
+                <th>Código</th>
+                <th>Pieza</th>
+                <th>Medida</th>
+                <th>Posición</th>
+                <th>Grano</th>
+              </tr>
+            </thead>
+            <tbody id="cut-report"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="guide">
+        <article>
+          <h2>Reglas usadas</h2>
+          <p><strong>Sangría:</strong> se descuenta 3,2 mm por corte como valor industrial seguro.</p>
+          <p><strong>Margen:</strong> se reserva 10 mm por lado para sujeción y limpieza de borde.</p>
+          <p><strong>Optimización:</strong> se usa Greedy/FFDH, ordenando piezas por área y ubicándolas en franjas.</p>
+          <p><strong>Grano:</strong> cuando está activo, las piezas no se rotan para respetar la veta.</p>
+        </article>
+      </section>
+    </main>
+
+    <script src="despiece-planchas.js"></script>
+  </body>
+</html>
