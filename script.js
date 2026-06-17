@@ -23,6 +23,9 @@ const results = {
   height: document.querySelector("#result-height"),
   depth: document.querySelector("#result-depth"),
   gap: document.querySelector("#result-gap"),
+  doorWidth: document.querySelector("#result-door-width"),
+  doorHeight: document.querySelector("#result-door-height"),
+  warning: document.querySelector("#depth-warning"),
   cutList: document.querySelector("#cut-list"),
   preview: document.querySelector("#preview-cabinet"),
   hero: document.querySelector("#hero-model"),
@@ -45,6 +48,10 @@ function toNumber(field) {
 
 function mm(value) {
   return `${numberFormat.format(Math.max(value, 0))} mm`;
+}
+
+function measure(value) {
+  return typeof value === "number" ? mm(value) : value;
 }
 
 function clamp(value, min, max) {
@@ -86,7 +93,7 @@ function face(points, className, project, extra = "") {
   const projected = points.map(project);
   const coords = projected.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
   const depth = projected.reduce((sum, point) => sum + point.depth, 0) / projected.length;
-    return { depth, markup: `<polygon class="${className.trim()}" points="${coords}" ${extra} />` };
+  return { depth, markup: `<polygon class="${className.trim()}" points="${coords}" ${extra} />` };
 }
 
 function line3d(a, b, className, project) {
@@ -139,6 +146,38 @@ function cuboid(x, y, z, width, height, depth, className, project, hiddenFaces =
     });
 }
 
+function drawerTray(x, y, z, width, height, depth, project, extra = "") {
+  const wall = 10;
+  const frontDepth = 12;
+  const backDepth = 10;
+  const bottomHeight = 9;
+  const innerX = x + wall;
+  const innerY = y + wall;
+  const innerZ = z + frontDepth;
+  const innerWidth = width - wall * 2;
+  const innerHeight = height - wall - bottomHeight;
+  const innerDepth = depth - frontDepth - backDepth;
+
+  return [
+    ...cuboid(x, y, z, width, height, frontDepth, "drawer drawer-active drawer-front-panel", project, [], extra),
+    ...cuboid(x, y + wall, z + frontDepth, wall, innerHeight, innerDepth, "drawer-shell drawer-left-wall", project, [], extra),
+    ...cuboid(x + width - wall, y + wall, z + frontDepth, wall, innerHeight, innerDepth, "drawer-shell drawer-right-wall", project, [], extra),
+    ...cuboid(innerX, y + height - bottomHeight, z + frontDepth, innerWidth, bottomHeight, innerDepth, "drawer-shell drawer-bottom-board", project, [], extra),
+    ...cuboid(innerX, y + wall, z + depth - backDepth, innerWidth, innerHeight, backDepth, "drawer-shell drawer-back-wall", project, [], extra),
+    face(
+      [
+        { x: innerX, y: innerY, z: innerZ },
+        { x: innerX + innerWidth, y: innerY, z: innerZ },
+        { x: innerX + innerWidth, y: innerY + innerHeight, z: innerZ + innerDepth },
+        { x: innerX, y: innerY + innerHeight, z: innerZ + innerDepth },
+      ],
+      "drawer-interior",
+      project,
+      extra,
+    ),
+  ];
+}
+
 function renderCabinet(svg, options, view = modelViews.preview) {
   if (!svg) return;
 
@@ -175,33 +214,39 @@ function renderCabinet(svg, options, view = modelViews.preview) {
   for (let index = 0; index < drawerCount; index += 1) {
     const isActive = selectedDrawerIndex === index;
     const drawerY = y0 + board + index * (drawerHeight + drawerGap);
-    const openOffset = isActive ? -62 * drawerOpenProgress : 4;
+    const openOffset = isActive ? -118 * drawerOpenProgress : 4;
+    const openDrop = isActive ? 14 * drawerOpenProgress : 0;
     const drawerClass = isActive ? "drawer drawer-active" : "drawer drawer-wood";
     const drawerX = x0 + board + 8;
+    const activeDrawerY = drawerY + openDrop;
     const drawerZ = z0 + openOffset;
     const drawerWidth = innerWidth - 16;
 
-    pieces.push(
-      ...cuboid(
-        drawerX,
-        drawerY,
-        drawerZ,
-        drawerWidth,
-        drawerHeight,
-        showStructure || isActive ? drawerDepth : 18,
-        `${drawerClass} drawer-box`,
-        project,
-        showStructure || isActive ? [] : ["back", "left", "right", "top", "bottom"],
-        `data-drawer-index="${index}"`,
-      ),
-    );
+    if (isActive) {
+      pieces.push(...drawerTray(drawerX, activeDrawerY, drawerZ, drawerWidth, drawerHeight, drawerDepth, project, `data-drawer-index="${index}"`));
+    } else {
+      pieces.push(
+        ...cuboid(
+          drawerX,
+          activeDrawerY,
+          drawerZ,
+          drawerWidth,
+          drawerHeight,
+          showStructure ? drawerDepth : 18,
+          `${drawerClass} drawer-box`,
+          project,
+          showStructure ? [] : ["back", "left", "right", "top", "bottom"],
+          `data-drawer-index="${index}"`,
+        ),
+      );
+    }
 
     const hitArea = face(
       [
-        { x: drawerX, y: drawerY, z: drawerZ - 1 },
-        { x: drawerX + drawerWidth, y: drawerY, z: drawerZ - 1 },
-        { x: drawerX + drawerWidth, y: drawerY + drawerHeight, z: drawerZ - 1 },
-        { x: drawerX, y: drawerY + drawerHeight, z: drawerZ - 1 },
+        { x: drawerX, y: activeDrawerY, z: drawerZ - 1 },
+        { x: drawerX + drawerWidth, y: activeDrawerY, z: drawerZ - 1 },
+        { x: drawerX + drawerWidth, y: activeDrawerY + drawerHeight, z: drawerZ - 1 },
+        { x: drawerX, y: activeDrawerY + drawerHeight, z: drawerZ - 1 },
       ],
       "drawer-hit-area",
       project,
@@ -214,7 +259,7 @@ function renderCabinet(svg, options, view = modelViews.preview) {
       pieces.push(
         ...cuboid(
           x0 + board + 24,
-          drawerY + 14,
+          activeDrawerY + 14,
           z0 + openOffset - 2,
           innerWidth - 48,
           Math.max(drawerHeight - 28, 12),
@@ -254,12 +299,18 @@ function renderCabinet(svg, options, view = modelViews.preview) {
       .cabinet-model .back-panel-front { fill: #b58a60; }
       .cabinet-model .drawer-wood { fill: #a17951; stroke: #111; stroke-width: 1.9; stroke-linejoin: round; }
       .cabinet-model .drawer-active { fill: #27ad9e; stroke: #111; stroke-width: 2.2; stroke-linejoin: round; }
-      .cabinet-model .drawer-active.drawer-box-right,
-      .cabinet-model .drawer-active.drawer-box-left { fill: #1f887f; }
-      .cabinet-model .drawer-active.drawer-box-top { fill: #35c0b0; }
+      .cabinet-model .drawer-front-panel-left,
+      .cabinet-model .drawer-front-panel-right { fill: #1f887f; }
+      .cabinet-model .drawer-front-panel-top { fill: #35c0b0; }
+      .cabinet-model .drawer-shell { fill: #b08458; stroke: #111; stroke-width: 1.65; stroke-linejoin: round; }
+      .cabinet-model .drawer-left-wall-right,
+      .cabinet-model .drawer-right-wall-left,
+      .cabinet-model .drawer-back-wall-front { fill: #8c6543; }
+      .cabinet-model .drawer-bottom-board-top,
+      .cabinet-model .drawer-interior { fill: #c39968; stroke: #111; stroke-width: 1.25; stroke-linejoin: round; }
       .cabinet-model .inset { fill: rgba(97, 65, 41, 0.28); stroke: #111; stroke-width: 1.2; }
       .cabinet-model .inset-active { fill: rgba(255, 255, 255, 0.14); }
-      .cabinet-model .drawer-hit-area { fill: transparent; stroke: transparent; cursor: pointer; pointer-events: all; }
+      .cabinet-model .drawer-hit-area { fill: rgba(0, 0, 0, 0.001); stroke: transparent; cursor: pointer; pointer-events: all; }
       .cabinet-model .model-dim { stroke: #111; stroke-width: 1.6; }
       .cabinet-model .model-label { fill: #111; font: 800 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; paint-order: stroke; stroke: #dfe6ee; stroke-width: 4; }
       .cabinet-model .model-shadow { fill: rgba(32, 35, 34, 0.13); }
@@ -278,18 +329,20 @@ function renderCabinet(svg, options, view = modelViews.preview) {
   `;
 }
 
-function animateDrawer(targetProgress) {
+function animateDrawer(targetProgress, onComplete) {
   if (drawerAnimationFrame) {
     cancelAnimationFrame(drawerAnimationFrame);
   }
 
   const startProgress = drawerOpenProgress;
   const startTime = performance.now();
-  const duration = 320;
+  const duration = targetProgress > startProgress ? 520 : 360;
 
   function step(now) {
     const t = clamp((now - startTime) / duration, 0, 1);
-    const eased = 1 - Math.pow(1 - t, 3);
+    const eased = targetProgress > startProgress
+      ? 1 + 0.08 * Math.sin(Math.PI * t) - Math.pow(1 - t, 3)
+      : 1 - Math.pow(1 - t, 3);
     drawerOpenProgress = startProgress + (targetProgress - startProgress) * eased;
     renderModels();
 
@@ -298,6 +351,7 @@ function animateDrawer(targetProgress) {
     } else {
       drawerOpenProgress = targetProgress;
       drawerAnimationFrame = null;
+      if (onComplete) onComplete();
       renderModels();
     }
   }
@@ -325,26 +379,41 @@ function calculate() {
   const isGrooved = fields.bottomMode.value === "grooved";
   const grooveDepth = isGrooved ? toNumber(fields.grooveDepth) : 0;
   const showStructure = fields.showStructure ? fields.showStructure.checked : true;
+  const doorGap = 2;
+  const slideFits = cabinetDepth >= slideLength;
 
   const drawerWidth = cabinetWidth - slideThickness * 2;
   const totalGap = verticalGap * drawerCount;
   const drawerHeight = (cabinetHeight - totalGap) / drawerCount;
-  const drawerDepth = Math.min(cabinetDepth, slideLength) - depthDiscount;
+  const drawerDepth = slideFits ? slideLength - depthDiscount : 0;
   const frontBackLength = drawerWidth - materialThickness * 2;
   const bottomWidth = isGrooved ? drawerWidth - materialThickness * 2 + grooveDepth * 2 : drawerWidth;
   const bottomDepth = isGrooved ? drawerDepth - materialThickness * 2 + grooveDepth * 2 : drawerDepth;
+  const doorWidth = cabinetWidth - doorGap * 2;
+  const doorHeight = (cabinetHeight - doorGap * (drawerCount + 1)) / drawerCount;
 
   results.width.textContent = mm(drawerWidth);
   results.height.textContent = mm(drawerHeight);
-  results.depth.textContent = mm(drawerDepth);
+  results.depth.textContent = slideFits ? mm(drawerDepth) : "No compatible";
   results.gap.textContent = mm(totalGap);
+  results.doorWidth.textContent = mm(doorWidth);
+  results.doorHeight.textContent = mm(doorHeight);
+
+  if (slideFits) {
+    results.warning.hidden = true;
+    results.warning.textContent = "";
+  } else {
+    results.warning.hidden = false;
+    results.warning.textContent = `El fondo disponible (${mm(cabinetDepth)}) no puede ser menor que el largo de la corredera (${mm(slideLength)}). Usa una corredera mas corta o aumenta el fondo del mueble.`;
+  }
 
   const pieces = [
-    ["Lateral izquierdo", drawerCount, drawerHeight, drawerDepth, `${mm(materialThickness)} tablero`],
-    ["Lateral derecho", drawerCount, drawerHeight, drawerDepth, `${mm(materialThickness)} tablero`],
+    ["Lateral izquierdo", drawerCount, drawerHeight, slideFits ? drawerDepth : "No compatible", `${mm(materialThickness)} tablero`],
+    ["Lateral derecho", drawerCount, drawerHeight, slideFits ? drawerDepth : "No compatible", `${mm(materialThickness)} tablero`],
     ["Frente interior", drawerCount, drawerHeight, frontBackLength, `${mm(materialThickness)} tablero`],
     ["Trasera", drawerCount, drawerHeight, frontBackLength, `${mm(materialThickness)} tablero`],
-    ["Fondo", drawerCount, bottomWidth, bottomDepth, `${mm(bottomThickness)} fondo`],
+    ["Fondo", drawerCount, bottomWidth, slideFits ? bottomDepth : "No compatible", `${mm(bottomThickness)} fondo`],
+    ["Puerta / frente visible", drawerCount, doorHeight, doorWidth, "frente con 2 mm de luz"],
   ];
 
   results.cutList.innerHTML = pieces
@@ -353,8 +422,8 @@ function calculate() {
         <tr>
           <td>${name}</td>
           <td>${quantity}</td>
-          <td>${mm(width)}</td>
-          <td>${mm(length)}</td>
+          <td>${measure(width)}</td>
+          <td>${measure(length)}</td>
           <td>${material}</td>
         </tr>
       `,
@@ -383,12 +452,41 @@ function bindModelDrag(svg, view) {
   let lastY = 0;
   let totalMovement = 0;
   let ignoreNextClick = false;
+  let drawerGestureIndex = null;
+
+  function findDrawerTarget(event) {
+    let target = event.target.closest("[data-drawer-index]");
+    if (!target) {
+      target = [...svg.querySelectorAll(".drawer-hit-area")].find((area) => {
+        const rect = area.getBoundingClientRect();
+        return event.clientX >= rect.left
+          && event.clientX <= rect.right
+          && event.clientY >= rect.top
+          && event.clientY <= rect.bottom;
+      });
+    }
+    return target && svg.contains(target) ? target : null;
+  }
+
+  function toggleDrawer(drawerIndex) {
+    if (selectedDrawerIndex === drawerIndex) {
+      animateDrawer(0, () => {
+        selectedDrawerIndex = null;
+      });
+    } else {
+      selectedDrawerIndex = drawerIndex;
+      drawerOpenProgress = 0;
+      animateDrawer(1);
+    }
+  }
 
   svg.addEventListener("pointerdown", (event) => {
     isDragging = true;
     lastX = event.clientX;
     lastY = event.clientY;
     totalMovement = 0;
+    const drawerTarget = findDrawerTarget(event);
+    drawerGestureIndex = drawerTarget ? Number.parseInt(drawerTarget.dataset.drawerIndex, 10) : null;
     svg.setPointerCapture(event.pointerId);
     svg.classList.add("is-dragging");
   });
@@ -400,12 +498,20 @@ function bindModelDrag(svg, view) {
     lastX = event.clientX;
     lastY = event.clientY;
     totalMovement += Math.abs(deltaX) + Math.abs(deltaY);
-    view.yaw += deltaX * 0.45;
+    if (drawerGestureIndex !== null) return;
+    view.yaw -= deltaX * 0.45;
     view.pitch = ((view.pitch - deltaY * 0.35 + 180) % 360) - 180;
     renderModels();
   });
 
   const stopDragging = (event) => {
+    if (drawerGestureIndex !== null && totalMovement > 8) {
+      toggleDrawer(drawerGestureIndex);
+      ignoreNextClick = true;
+      window.setTimeout(() => {
+        ignoreNextClick = false;
+      }, 0);
+    }
     if (totalMovement > 8) {
       ignoreNextClick = true;
       window.setTimeout(() => {
@@ -417,6 +523,7 @@ function bindModelDrag(svg, view) {
     if (event.pointerId !== undefined && svg.hasPointerCapture(event.pointerId)) {
       svg.releasePointerCapture(event.pointerId);
     }
+    drawerGestureIndex = null;
   };
 
   svg.addEventListener("pointerup", stopDragging);
@@ -425,22 +532,16 @@ function bindModelDrag(svg, view) {
 
   svg.addEventListener("click", (event) => {
     if (ignoreNextClick) return;
-    const target = event.target.closest("[data-drawer-index]");
+    const target = findDrawerTarget(event);
     if (!target || !svg.contains(target)) {
-      selectedDrawerIndex = null;
-      animateDrawer(0);
+      animateDrawer(0, () => {
+        selectedDrawerIndex = null;
+      });
       return;
     }
 
     const drawerIndex = Number.parseInt(target.dataset.drawerIndex, 10);
-    if (selectedDrawerIndex === drawerIndex) {
-      selectedDrawerIndex = null;
-      animateDrawer(0);
-    } else {
-      selectedDrawerIndex = drawerIndex;
-      drawerOpenProgress = 0;
-      animateDrawer(1);
-    }
+    toggleDrawer(drawerIndex);
   });
 }
 

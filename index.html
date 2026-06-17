@@ -186,7 +186,17 @@
               <dt>Holgura total</dt>
               <dd id="result-gap">6 mm</dd>
             </div>
+            <div>
+              <dt>Ancho puerta</dt>
+              <dd id="result-door-width">396 mm</dd>
+            </div>
+            <div>
+              <dt>Alto puerta</dt>
+              <dd id="result-door-height">197,3 mm</dd>
+            </div>
           </dl>
+
+          <p class="validation-message" id="depth-warning" hidden></p>
         </section>
       </section>
 
@@ -216,7 +226,8 @@
           <h2>Reglas usadas</h2>
           <p><strong>Ancho:</strong> ancho interior menos dos correderas. El valor inicial usa 13 mm por lado.</p>
           <p><strong>Alto:</strong> alto interior menos holguras, dividido por la cantidad de cajones.</p>
-          <p><strong>Profundidad:</strong> largo de corredera menos el descuento definido, normalmente 20 a 30 mm.</p>
+          <p><strong>Profundidad:</strong> el fondo disponible debe ser igual o mayor al largo de la corredera.</p>
+          <p><strong>Puerta:</strong> el frente del cajon descuenta 2 mm por orilla para evitar roces.</p>
           <p><strong>Fondo:</strong> puede quedar igual a la caja exterior o crecer por la ranura cuando se elige fondo ranurado.</p>
         </article>
       </section>
